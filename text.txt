@@ -1,0 +1,16 @@
+"temperature": 37.0,
+"heart_rate": 85.0,
+"bp_sys": 120.0,
+"bp_dia": 80.0,
+"humidity": 40.0,
+"fever": 0,
+"cough": 0,
+"chest_pain": 0,
+"shortness_of_breath": 0,
+"fatigue": 0,
+"headache": 0
+
+
+
+cd "F:\Final Project\Run File"
+python app.py

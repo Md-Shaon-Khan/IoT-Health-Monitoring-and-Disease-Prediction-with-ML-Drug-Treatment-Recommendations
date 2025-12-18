@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 Health Prediction System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--gray-900);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="M0,0 L1000,0 L1000,100 L0,100 Z" fill="white" opacity="0.1"/></svg>');
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+                padding: 30px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+        }
+        
+        .section {
+            background: var(--gray-100);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid var(--gray-200);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .section-icon {
+            background: var(--primary);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .section h2 {
+            color: var(--gray-900);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .form-label i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .bp-group {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 12px;
+            align-items: end;
+        }
+        
+        .bp-divider {
+            text-align: center;
+            padding-bottom: 14px;
+            color: var(--gray-500);
+            font-weight: bold;
+        }
+        
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 480px) {
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        
+        .checkbox-item:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        
+        .checkbox-item.checked {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+        
+        .checkbox-item input {
+            margin-right: 12px;
+            transform: scale(1.3);
+            accent-color: var(--primary);
+        }
+        
+        .checkbox-content {
+            flex: 1;
+        }
+        
+        .checkbox-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .checkbox-desc {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            line-height: 1.4;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 18px 32px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--gray-300);
+            color: var(--gray-700);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-400);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message-input {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            border: 2px dashed var(--gray-200);
+            margin-bottom: 28px;
+            transition: border-color 0.3s;
+        }
+        
+        .message-input:hover {
+            border-color: var(--primary);
+        }
+        
+        .message-input textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 16px;
+            font-family: monospace;
+            transition: border-color 0.3s;
+        }
+        
+        .message-input textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+            background: white;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        .spinner {
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid var(--danger);
+            display: none;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .result-container {
+            display: none;
+        }
+        
+        .result-container.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            border: 3px solid;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: currentColor;
+            opacity: 0.3;
+        }
+        
+        .result-card.normal {
+            border-color: var(--success);
+            color: var(--success);
+        }
+        
+        .result-card.heart-risk {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        
+        .result-card.fever {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+        
+        .result-card.hypertension {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+        
+        .result-card.hypotension {
+            border-color: var(--info);
+            color: var(--info);
+        }
+        
+        .disease-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .disease-name {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+        }
+        
+        .confidence-badge {
+            background: currentColor;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .probability-chart {
+            background: var(--gray-100);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 24px 0;
+        }
+        
+        .probability-bar {
+            height: 24px;
+            background: var(--gray-200);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 1s ease-out;
+            position: relative;
+        }
+        
+        .probability-label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 600;
+            color: var(--gray-900);
+            z-index: 1;
+        }
+        
+        .probability-value {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 600;
+            color: var(--gray-900);
+            z-index: 1;
+        }
+        
+        .actions-card {
+            background: var(--gray-100);
+            padding: 28px;
+            border-radius: 16px;
+            margin-top: 24px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .actions-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .actions-content {
+            white-space: pre-line;
+            line-height: 1.7;
+            color: var(--gray-700);
+        }
+        
+        .disclaimer {
+            background: rgba(245, 158, 11, 0.1);
+            color: #92400e;
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 24px;
+            border-left: 4px solid var(--warning);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .no-result {
+            text-align: center;
+            padding: 60px 40px;
+            color: var(--gray-500);
+        }
+        
+        .no-result i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .no-result h3 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: var(--gray-700);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--gray-200);
+            margin-top: 40px;
+        }
+        
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .api-status.connected {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .api-status.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-heartbeat"></i> Health Prediction System</h1>
+                <p>AI-powered disease prediction based on vital signs and symptoms. Get instant insights about potential health conditions.</p>
+                <div class="status-badge">
+                    <i class="fas fa-shield-alt"></i> Secure & Confidential
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Left Column: Input Form -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h2>Patient Information</h2>
+                </div>
+                
+                <!-- Message Input -->
+                <div class="message-input">
+                    <h3 style="margin-bottom: 16px; color: var(--gray-900);">
+                        <i class="fas fa-comment-medical"></i> Message Data (Optional)
+                    </h3>
+                    <p style="margin-bottom: 16px; color: var(--gray-700);">
+                        Paste vital signs from message/device (comma-separated):
+                    </p>
+                    <textarea id="messageData" placeholder="Example: 37.5, 85, 120, 80, 45">39.0, 110, 115, 75, 40</textarea>
+                    <button class="btn btn-secondary" onclick="parseMessageData()">
+                        <i class="fas fa-code"></i> Parse Message Data
+                    </button>
+                </div>
+                
+                <!-- Vital Signs -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-thermometer-half"></i> Temperature (°C)
+                    </label>
+                    <input type="number" id="temperature" class="form-control" step="0.1" min="35" max="42" placeholder="36.5" value="39.0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-heartbeat"></i> Heart Rate (bpm)
+                    </label>
+                    <input type="number" id="heart_rate" class="form-control" min="40" max="180" placeholder="75" value="110">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tachometer-alt"></i> Blood Pressure (mmHg)
+                    </label>
+                    <div class="bp-group">
+                        <div>
+                            <input type="number" id="bp_sys" class="form-control" min="70" max="200" placeholder="120" value="115" title="Systolic">
+                            <small style="display: block; text-align: center; margin-top: 6px; color: var(--gray-500);">Systolic</small>
+                        </div>
+                        <div class="bp-divider">/</div>
+                        <div>
+                            <input type="number" id="bp_dia" class="form-control" min="40" max="130" placeholder="80" value="75" title="Diastolic">
+                            <small style="display: block; text-align: center; margin-top: 6px; color: var(--gray-500);">Diastolic</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tint"></i> Humidity (%)
+                    </label>
+                    <input type="number" id="humidity" class="form-control" min="20" max="80" placeholder="40" value="40">
+                </div>
+                
+                <!-- Symptoms -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-stethoscope"></i> Symptoms
+                        <span style="font-weight: normal; color: var(--gray-500);">(Check all that apply)</span>
+                    </label>
+                    <div class="checkbox-grid" id="symptomsContainer">
+                        <!-- Will be filled by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- API Status -->
+                <div id="apiStatus" class="api-status disconnected">
+                    <i class="fas fa-plug"></i> API: Checking...
+                </div>
+                
+                <!-- Predict Button -->
+                <button class="btn" id="predictBtn" onclick="makePrediction()">
+                    <i class="fas fa-search"></i> Analyze & Predict Disease
+                </button>
+                
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 16px; color: var(--gray-700); font-weight: 600;">Analyzing health data...</p>
+                    <p style="margin-top: 8px; color: var(--gray-500); font-size: 0.9rem;">Please wait while our AI model processes the information</p>
+                </div>
+                
+                <!-- Error -->
+                <div class="error" id="error"></div>
+            </div>
+            
+            <!-- Right Column: Results -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2>Prediction Results</h2>
+                </div>
+                
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Medical Disclaimer:</strong> This system provides AI-powered predictions based on machine learning algorithms. It is not a substitute for professional medical diagnosis, advice, or treatment. Always consult with qualified healthcare providers for medical concerns.
+                </div>
+                
+                <!-- Results Container -->
+                <div class="result-container" id="resultContainer">
+                    <!-- Results will be displayed here -->
+                </div>
+                
+                <!-- No Result Placeholder -->
+                <div class="no-result" id="noResult">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No Analysis Yet</h3>
+                    <p>Enter patient data on the left and click "Analyze & Predict Disease" to see results</p>
+                    <p style="margin-top: 20px; font-size: 0.9rem; color: var(--gray-500);">
+                        <i class="fas fa-lightbulb"></i> Tip: Try the example data already filled in the form
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Health Prediction System v1.0 • Powered by AI/ML • For demonstration purposes only</p>
+            <p style="margin-top: 8px; font-size: 0.85rem;">
+                <i class="fas fa-server"></i> Backend: FastAPI • <i class="fas fa-brain"></i> Model: Deep Learning (99.03% accuracy)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Symptoms configuration
+        const symptoms = [
+            { id: 'fever', name: 'Fever', description: 'Elevated body temperature (>37.5°C)' },
+            { id: 'cough', name: 'Cough', description: 'Persistent or dry coughing' },
+            { id: 'chest_pain', name: 'Chest Pain', description: 'Pain or discomfort in chest area' },
+            { id: 'shortness_of_breath', name: 'Shortness of Breath', description: 'Difficulty breathing or dyspnea' },
+            { id: 'fatigue', name: 'Fatigue', description: 'Unusual tiredness or weakness' },
+            { id: 'headache', name: 'Headache', description: 'Persistent or severe headache' }
+        ];
+
+        // Initialize symptoms checkboxes
+        function initSymptoms() {
+            const container = document.getElementById('symptomsContainer');
+            container.innerHTML = '';
+            
+            symptoms.forEach(symptom => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="${symptom.id}" name="symptom">
+                    <div class="checkbox-content">
+                        <span class="checkbox-title">${symptom.name}</span>
+                        <span class="checkbox-desc">${symptom.description}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+                
+                // Set default check for fever and cough for example
+                if (symptom.id === 'fever' || symptom.id === 'cough' || 
+                    symptom.id === 'fatigue' || symptom.id === 'headache') {
+                    div.querySelector('input').checked = true;
+                    div.classList.add('checked');
+                }
+                
+                // Add click handler
+                div.addEventListener('click', (e) => {
+                    const checkbox = div.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    div.classList.toggle('checked', checkbox.checked);
+                });
+            });
+        }
+
+        // Parse message data
+        function parseMessageData() {
+            const messageText = document.getElementById('messageData').value.trim();
+            if (!messageText) {
+                showError('Please enter message data in the textarea');
+                return;
+            }
+            
+            try {
+                const values = messageText.split(',').map(v => parseFloat(v.trim()));
+                
+                if (values.length >= 5) {
+                    document.getElementById('temperature').value = values[0];
+                    document.getElementById('heart_rate').value = values[1];
+                    document.getElementById('bp_sys').value = values[2];
+                    document.getElementById('bp_dia').value = values[3];
+                    document.getElementById('humidity').value = values[4];
+                    
+                    showNotification('Vital signs parsed successfully!', 'success');
+                } else {
+                    showError('Please provide all 5 values: temperature, heart_rate, bp_sys, bp_dia, humidity');
+                }
+            } catch (error) {
+                showError('Error parsing message data. Please check the format (e.g., "37.5, 85, 120, 80, 45")');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `api-status ${type === 'success' ? 'connected' : 'disconnected'}`;
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            notification.style.marginTop = '10px';
+            notification.style.animation = 'fadeIn 0.3s';
+            
+            const apiStatus = document.getElementById('apiStatus');
+            apiStatus.parentNode.insertBefore(notification, apiStatus.nextSibling);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-10px)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Make prediction API call
+        async function makePrediction() {
+            // Get form values
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const heart_rate = parseFloat(document.getElementById('heart_rate').value);
+            const bp_sys = parseFloat(document.getElementById('bp_sys').value);
+            const bp_dia = parseFloat(document.getElementById('bp_dia').value);
+            const humidity = parseFloat(document.getElementById('humidity').value);
+            
+            // Validate inputs
+            if (!temperature || temperature < 35 || temperature > 42) {
+                showError('Please enter a valid temperature (35-42°C)');
+                return;
+            }
+            if (!heart_rate || heart_rate < 40 || heart_rate > 180) {
+                showError('Please enter a valid heart rate (40-180 bpm)');
+                return;
+            }
+            if (!bp_sys || bp_sys < 70 || bp_sys > 200) {
+                showError('Please enter valid systolic BP (70-200 mmHg)');
+                return;
+            }
+            if (!bp_dia || bp_dia < 40 || bp_dia > 130) {
+                showError('Please enter valid diastolic BP (40-130 mmHg)');
+                return;
+            }
+            if (!humidity || humidity < 20 || humidity > 80) {
+                showError('Please enter valid humidity (20-80%)');
+                return;
+            }
+            
+            // Get symptom values
+            const fever = document.getElementById('fever').checked ? 1 : 0;
+            const cough = document.getElementById('cough').checked ? 1 : 0;
+            const chest_pain = document.getElementById('chest_pain').checked ? 1 : 0;
+            const shortness_of_breath = document.getElementById('shortness_of_breath').checked ? 1 : 0;
+            const fatigue = document.getElementById('fatigue').checked ? 1 : 0;
+            const headache = document.getElementById('headache').checked ? 1 : 0;
+            
+            // Prepare data
+            const data = {
+                temperature: temperature,
+                heart_rate: heart_rate,
+                bp_sys: bp_sys,
+                bp_dia: bp_dia,
+                humidity: humidity,
+                fever: fever,
+                cough: cough,
+                chest_pain: chest_pain,
+                shortness_of_breath: shortness_of_breath,
+                fatigue: fatigue,
+                headache: headache
+            };
+            
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('predictBtn').disabled = true;
+            
+            try {
+                // Make API call
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error (${response.status}): ${errorText}`);
+                }
+                
+                const result = await response.json();
+                
+                // Hide loading
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('predictBtn').disabled = false;
+                
+                // Display results
+                displayResults(result);
+                
+            } catch (error) {
+                // Hide loading
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('predictBtn').disabled = false;
+                
+                // Show error
+                showError(`Failed to get prediction: ${error.message}`);
+                console.error('Prediction error:', error);
+            }
+        }
+
+        // Display prediction results
+        function displayResults(result) {
+            const container = document.getElementById('resultContainer');
+            const noResult = document.getElementById('noResult');
+            
+            // Hide "no result" message
+            noResult.style.display = 'none';
+            
+            // Determine card class based on disease
+            let cardClass = '';
+            let icon = '';
+            switch(result.disease) {
+                case 'Normal':
+                    cardClass = 'normal';
+                    icon = 'fas fa-smile';
+                    break;
+                case 'Heart_Risk':
+                    cardClass = 'heart-risk';
+                    icon = 'fas fa-heartbeat';
+                    break;
+                case 'Fever_Respiratory':
+                    cardClass = 'fever';
+                    icon = 'fas fa-thermometer-full';
+                    break;
+                case 'Hypertension':
+                    cardClass = 'hypertension';
+                    icon = 'fas fa-tachometer-alt';
+                    break;
+                case 'Hypotension':
+                    cardClass = 'hypotension';
+                    icon = 'fas fa-tint';
+                    break;
+            }
+            
+            // Determine confidence class
+            let confidenceClass = 'high';
+            let confidenceIcon = 'fas fa-check-circle';
+            if (result.confidence < 0.7) {
+                confidenceClass = 'low';
+                confidenceIcon = 'fas fa-exclamation-circle';
+            } else if (result.confidence < 0.9) {
+                confidenceClass = 'medium';
+                confidenceIcon = 'fas fa-info-circle';
+            }
+            
+            // Sort probabilities for display
+            const sortedProbs = Object.entries(result.probabilities)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            // Create probability bars HTML
+            const probabilityBars = sortedProbs.map(([disease, prob]) => {
+                const width = (prob * 100).toFixed(1);
+                const color = disease === result.disease ? 'currentColor' : 'var(--gray-300)';
+                return `
+                    <div class="probability-bar">
+                        <div class="probability-fill" style="width: ${width}%; background: ${color};"></div>
+                        <span class="probability-label">${disease.replace('_', ' ')}</span>
+                        <span class="probability-value">${width}%</span>
+                    </div>
+                `;
+            }).join('');
+            
+            // Create result HTML
+            const resultHTML = `
+                <div class="result-card ${cardClass}">
+                    <div class="disease-header">
+                        <div>
+                            <h2 class="disease-name"><i class="${icon}"></i> ${result.disease.replace('_', ' ')}</h2>
+                        </div>
+                        <div class="confidence-badge">
+                            <i class="${confidenceIcon}"></i> ${(result.confidence * 100).toFixed(1)}% Confidence
+                        </div>
+                    </div>
+                    
+                    ${result.warning ? `
+                        <div class="error show">
+                            <i class="fas fa-exclamation-triangle"></i> ${result.warning}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="probability-chart">
+                        <h3 style="margin-bottom: 20px; color: var(--gray-900);">
+                            <i class="fas fa-chart-bar"></i> Probability Distribution
+                        </h3>
+                        ${probabilityBars}
+                    </div>
+                    
+                    <div class="actions-card">
+                        <h3 class="actions-title">
+                            <i class="fas fa-first-aid"></i> Recommended Actions
+                        </h3>
+                        <div class="actions-content">${result.suggested_actions}</div>
+                    </div>
+                    
+                    <div style="margin-top: 24px; font-size: 0.9rem; color: var(--gray-500);">
+                        <i class="fas fa-clock"></i> Analysis timestamp: ${new Date(result.timestamp).toLocaleString()}
+                    </div>
+                </div>
+            `;
+            
+            // Update container
+            container.innerHTML = resultHTML;
+            container.classList.add('show');
+            
+            // Animate probability bars
+            setTimeout(() => {
+                document.querySelectorAll('.probability-fill').forEach(bar => {
+                    bar.style.transition = 'width 1.5s ease-out';
+                });
+            }, 100);
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            errorDiv.classList.add('show');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 10000);
+        }
+
+        // Check API connection
+        async function checkAPIConnection() {
+            const apiStatus = document.getElementById('apiStatus');
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    apiStatus.innerHTML = `<i class="fas fa-plug"></i> API: Connected`;
+                    apiStatus.className = 'api-status connected';
+                    
+                    if (data.model_loaded) {
+                        apiStatus.innerHTML += ` • Model: ${(data.model_accuracy * 100).toFixed(1)}% accuracy`;
+                    }
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                apiStatus.innerHTML = `<i class="fas fa-plug"></i> API: Disconnected`;
+                apiStatus.className = 'api-status disconnected';
+                console.warn('API connection failed:', error.message);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initSymptoms();
+            
+            // Check API connection every 30 seconds
+            checkAPIConnection();
+            setInterval(checkAPIConnection, 30000);
+            
+            // Auto-predict after 2 seconds with example data
+            setTimeout(() => {
+                if (window.location.hash !== '#noautopredict') {
+                    makePrediction();
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
