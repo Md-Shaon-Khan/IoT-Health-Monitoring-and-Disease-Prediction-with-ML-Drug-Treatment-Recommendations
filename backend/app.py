@@ -2,9 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 import numpy as np
 import pandas as pd
 import pickle
@@ -28,11 +27,10 @@ logger = logging.getLogger(__name__)
 # Paths
 # ------------------------------
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR.parent / "Main Model Train" / "model_saved.pkl"
-INDEX_HTML_PATH = BASE_DIR / "index.html"
+MODEL_PATH = BASE_DIR.parent / "model" / "model_saved.pkl"
+INDEX_HTML_PATH = BASE_DIR.parent / "frontend" / "index.html"
 
 os.makedirs("static", exist_ok=True)
-os.makedirs("templates", exist_ok=True)
 
 # ------------------------------
 # FastAPI app
@@ -57,10 +55,9 @@ app.add_middleware(
 )
 
 # ------------------------------
-# Static files & templates
+# Static files
 # ------------------------------
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
 
 # ------------------------------
 # Database configuration
@@ -106,15 +103,26 @@ class DatabaseManager:
                 logger.error("❌ Could not connect to DB for initialization")
                 return
             cursor = connection.cursor()
-            # patients table
+            
+            # patients table with additional fields
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS patients (
                     patient_id VARCHAR(50) PRIMARY KEY,
+                    first_name VARCHAR(100),
+                    last_name VARCHAR(100),
+                    age INT,
+                    gender VARCHAR(10),
+                    contact_number VARCHAR(20),
+                    email VARCHAR(100),
+                    blood_group VARCHAR(5),
+                    allergies TEXT,
+                    medical_history TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    total_visits INT DEFAULT 1
+                    total_visits INT DEFAULT 0
                 )
             """)
+            
             # health_records table
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS health_records (
@@ -139,6 +147,7 @@ class DatabaseManager:
                     INDEX idx_disease (predicted_disease)
                 )
             """)
+            
             connection.commit()
             cursor.close()
             connection.close()
@@ -156,7 +165,173 @@ class DatabaseManager:
             if connection and connection.is_connected():
                 connection.close()
 
-    # Create/update patient
+    # Create new patient with details
+    def create_patient(self, patient_data: Dict) -> Optional[str]:
+        try:
+            with self.get_db_connection() as conn:
+                if not conn:
+                    return None
+                cursor = conn.cursor()
+                
+                # Generate patient ID
+                patient_id = f"PAT{uuid.uuid4().hex[:8].upper()}"
+                
+                query = """
+                    INSERT INTO patients (
+                        patient_id, first_name, last_name, age, gender,
+                        contact_number, email, blood_group, allergies, medical_history
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                
+                values = (
+                    patient_id,
+                    patient_data.get('first_name'),
+                    patient_data.get('last_name'),
+                    patient_data.get('age'),
+                    patient_data.get('gender'),
+                    patient_data.get('contact_number'),
+                    patient_data.get('email'),
+                    patient_data.get('blood_group'),
+                    patient_data.get('allergies'),
+                    patient_data.get('medical_history')
+                )
+                
+                cursor.execute(query, values)
+                conn.commit()
+                cursor.close()
+                
+                return patient_id
+                
+        except Error as e:
+            logger.error(f"Error creating patient: {e}")
+            return None
+
+    # Get patient details
+    def get_patient(self, patient_id: str) -> Optional[Dict]:
+        try:
+            with self.get_db_connection() as conn:
+                if not conn:
+                    return None
+                cursor = conn.cursor(dictionary=True)
+                
+                cursor.execute("SELECT * FROM patients WHERE patient_id = %s", (patient_id,))
+                patient = cursor.fetchone()
+                
+                if patient:
+                    # Get latest health record
+                    cursor.execute("""
+                        SELECT predicted_disease, confidence, record_date 
+                        FROM health_records 
+                        WHERE patient_id = %s 
+                        ORDER BY record_date DESC 
+                        LIMIT 1
+                    """, (patient_id,))
+                    latest_record = cursor.fetchone()
+                    
+                    if latest_record:
+                        patient['latest_disease'] = latest_record['predicted_disease']
+                        patient['latest_confidence'] = latest_record['confidence']
+                        patient['last_checkup'] = latest_record['record_date']
+                    
+                    # Get total records count
+                    cursor.execute("""
+                        SELECT COUNT(*) as total_records 
+                        FROM health_records 
+                        WHERE patient_id = %s
+                    """, (patient_id,))
+                    count_result = cursor.fetchone()
+                    patient['total_records'] = count_result['total_records'] if count_result else 0
+                
+                cursor.close()
+                return patient
+                
+        except Error as e:
+            logger.error(f"Error getting patient: {e}")
+            return None
+
+    # Search patients
+    def search_patients(self, search_term: str = None, limit: int = 20, offset: int = 0) -> Dict:
+        try:
+            with self.get_db_connection() as conn:
+                if not conn:
+                    return {"patients": [], "total": 0}
+                cursor = conn.cursor(dictionary=True)
+                
+                base_query = """
+                    SELECT 
+                        p.*,
+                        COUNT(hr.record_id) as total_visits,
+                        MAX(hr.record_date) as last_visit
+                    FROM patients p
+                    LEFT JOIN health_records hr ON p.patient_id = hr.patient_id
+                    WHERE 1=1
+                """
+                
+                params = []
+                
+                if search_term:
+                    base_query += """
+                        AND (
+                            p.patient_id LIKE %s OR
+                            p.first_name LIKE %s OR
+                            p.last_name LIKE %s OR
+                            CONCAT(p.first_name, ' ', p.last_name) LIKE %s OR
+                            p.contact_number LIKE %s OR
+                            p.email LIKE %s
+                        )
+                    """
+                    search_pattern = f"%{search_term}%"
+                    params.extend([search_pattern] * 6)
+                
+                base_query += """
+                    GROUP BY p.patient_id
+                    ORDER BY p.created_at DESC
+                    LIMIT %s OFFSET %s
+                """
+                params.extend([limit, offset])
+                
+                cursor.execute(base_query, tuple(params))
+                patients = cursor.fetchall()
+                
+                # Get total count for pagination
+                count_query = """
+                    SELECT COUNT(DISTINCT p.patient_id) as total
+                    FROM patients p
+                    WHERE 1=1
+                """
+                count_params = []
+                
+                if search_term:
+                    count_query += """
+                        AND (
+                            p.patient_id LIKE %s OR
+                            p.first_name LIKE %s OR
+                            p.last_name LIKE %s OR
+                            CONCAT(p.first_name, ' ', p.last_name) LIKE %s OR
+                            p.contact_number LIKE %s OR
+                            p.email LIKE %s
+                        )
+                    """
+                    count_params.extend([search_pattern] * 6)
+                
+                cursor.execute(count_query, tuple(count_params))
+                total = cursor.fetchone()['total']
+                
+                cursor.close()
+                
+                return {
+                    "patients": patients,
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset,
+                    "has_more": (offset + len(patients)) < total
+                }
+                
+        except Error as e:
+            logger.error(f"Error searching patients: {e}")
+            return {"patients": [], "total": 0}
+
+    # Create/update patient for predictions
     def create_or_update_patient(self, patient_id: str):
         try:
             with self.get_db_connection() as conn:
@@ -169,7 +344,10 @@ class DatabaseManager:
                     WHERE patient_id = %s
                 """, (patient_id,))
                 if cursor.rowcount == 0:
-                    cursor.execute("INSERT INTO patients (patient_id, total_visits) VALUES (%s, 1)", (patient_id,))
+                    cursor.execute("""
+                        INSERT INTO patients (patient_id, total_visits) 
+                        VALUES (%s, 1)
+                    """, (patient_id,))
                 conn.commit()
                 cursor.close()
                 return True
@@ -240,8 +418,19 @@ class DatabaseManager:
 db_manager = DatabaseManager()
 
 # ------------------------------
-# Models
+# Pydantic Models
 # ------------------------------
+class PatientCreate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    contact_number: Optional[str] = None
+    email: Optional[str] = None
+    blood_group: Optional[str] = None
+    allergies: Optional[str] = None
+    medical_history: Optional[str] = None
+
 class HealthInput(BaseModel):
     patient_id: Optional[str]
     temperature: float = Field(..., ge=35.0, le=42.0)
@@ -342,19 +531,73 @@ async def health_check():
     return {
         "status": "🟢 Healthy" if MODEL_LOADED else "🔴 Unhealthy",
         "timestamp": datetime.now().isoformat(),
-        "model_loaded": MODEL_LOADED
+        "model_loaded": MODEL_LOADED,
+        "database_connected": True
     }
 
+# Patient Management Endpoints
+@app.post("/api/patient/create")
+async def create_patient(patient_data: PatientCreate):
+    """Create a new patient"""
+    if not patient_data.first_name:
+        raise HTTPException(status_code=400, detail="First name is required")
+    if not patient_data.age or patient_data.age < 0 or patient_data.age > 120:
+        raise HTTPException(status_code=400, detail="Please enter a valid age (0-120)")
+    if not patient_data.gender:
+        raise HTTPException(status_code=400, detail="Please select gender")
+    
+    patient_id = db_manager.create_patient(patient_data.dict())
+    if not patient_id:
+        raise HTTPException(status_code=500, detail="Failed to create patient")
+    
+    return {
+        "status": "success",
+        "message": "Patient created successfully",
+        "patient_id": patient_id
+    }
+
+@app.get("/api/patient/{patient_id}")
+async def get_patient_details(patient_id: str):
+    """Get detailed patient information"""
+    patient = db_manager.get_patient(patient_id)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return patient
+
+@app.get("/api/patients/search")
+async def search_patients(
+    q: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0
+):
+    """Search patients by ID, name, or contact"""
+    result = db_manager.search_patients(q, limit, offset)
+    return result
+
+# Health Prediction Endpoints
 @app.post("/api/predict", response_model=PredictionResult)
 async def make_prediction(input_data: HealthInput):
     if not MODEL_LOADED:
         raise HTTPException(status_code=503, detail="Model not loaded")
+    
+    # Generate patient ID if not provided
     if not input_data.patient_id:
         input_data.patient_id = f"PAT{uuid.uuid4().hex[:8].upper()}"
+    
+    # Make prediction
     result = predict_disease(input_data, model_loader)
-    record_id = db_manager.save_health_record(input_data.patient_id, input_data.dict_for_db(), result)
+    
+    # Save to database
+    record_id = db_manager.save_health_record(
+        input_data.patient_id, 
+        input_data.dict_for_db(), 
+        result
+    )
+    
+    # Get patient history for total visits
     patient_history = db_manager.get_patient_history(input_data.patient_id)
     total_visits = patient_history["patient_info"]["total_visits"] if patient_history else 1
+    
     return PredictionResult(
         patient_id=input_data.patient_id,
         disease=result["disease"],
@@ -369,6 +612,7 @@ async def make_prediction(input_data: HealthInput):
 
 @app.get("/api/patient/{patient_id}/history")
 async def get_patient_history(patient_id: str):
+    """Get patient health history"""
     history = db_manager.get_patient_history(patient_id)
     if not history:
         raise HTTPException(status_code=404, detail="Patient not found")

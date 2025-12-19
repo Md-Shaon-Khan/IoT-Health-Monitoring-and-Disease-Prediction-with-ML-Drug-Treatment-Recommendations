@@ -12,5 +12,5 @@
 
 
 
-cd "F:\Final Project\Run File"
-python app.py
+cd "F:\Final Project\backend"
+uvicorn app:app --reload
