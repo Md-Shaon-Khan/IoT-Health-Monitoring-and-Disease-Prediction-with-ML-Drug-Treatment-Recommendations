@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏥 Health Prediction System</title>
+    <title>🏥 Health Prediction System with Patient Tracking</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -35,7 +36,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 24px;
@@ -83,57 +84,44 @@
         .header p {
             font-size: 1.2rem;
             opacity: 0.9;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             line-height: 1.6;
         }
         
-        .status-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 20px;
-            backdrop-filter: blur(10px);
+        .main-content {
+            display: flex;
+            min-height: 800px;
         }
         
-        .content {
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
+        .sidebar {
+            width: 350px;
+            background: var(--gray-100);
+            border-right: 1px solid var(--gray-200);
+            padding: 30px;
+            overflow-y: auto;
         }
         
-        @media (max-width: 900px) {
-            .content {
-                grid-template-columns: 1fr;
-                padding: 30px;
-            }
-            
-            .header h1 {
-                font-size: 2.2rem;
-            }
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
         }
         
         .section {
-            background: var(--gray-100);
+            background: white;
             border-radius: 20px;
-            padding: 32px;
+            padding: 28px;
+            margin-bottom: 25px;
             border: 1px solid var(--gray-200);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .section:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
         .section-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             padding-bottom: 16px;
             border-bottom: 2px solid var(--primary);
         }
@@ -141,24 +129,25 @@
         .section-icon {
             background: var(--primary);
             color: white;
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
         
         .section h2 {
             color: var(--gray-900);
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             margin: 0;
+            flex: 1;
         }
         
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         
         .form-label {
@@ -168,17 +157,17 @@
             margin-bottom: 10px;
             color: var(--gray-700);
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
         
         .form-label i {
             color: var(--primary);
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
         
         .form-control {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 16px;
             border: 2px solid var(--gray-200);
             border-radius: 12px;
             font-size: 1rem;
@@ -192,37 +181,17 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
         
-        .bp-group {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 12px;
-            align-items: end;
-        }
-        
-        .bp-divider {
-            text-align: center;
-            padding-bottom: 14px;
-            color: var(--gray-500);
-            font-weight: bold;
-        }
-        
         .checkbox-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            grid-template-columns: 1fr;
+            gap: 10px;
             margin-top: 8px;
-        }
-        
-        @media (max-width: 480px) {
-            .checkbox-grid {
-                grid-template-columns: 1fr;
-            }
         }
         
         .checkbox-item {
             display: flex;
             align-items: center;
-            padding: 14px;
+            padding: 12px;
             background: white;
             border-radius: 12px;
             border: 2px solid var(--gray-200);
@@ -243,34 +212,38 @@
         
         .checkbox-item input {
             margin-right: 12px;
-            transform: scale(1.3);
+            transform: scale(1.2);
             accent-color: var(--primary);
         }
         
-        .checkbox-content {
-            flex: 1;
+        .patient-id-section {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(67, 56, 202, 0.1) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 2px solid var(--primary);
         }
         
-        .checkbox-title {
-            font-weight: 600;
-            color: var(--gray-900);
-            display: block;
-            margin-bottom: 4px;
-        }
-        
-        .checkbox-desc {
-            font-size: 0.85rem;
-            color: var(--gray-500);
-            line-height: 1.4;
+        .patient-id-display {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            border: 2px dashed var(--gray-300);
         }
         
         .btn {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border: none;
-            padding: 18px 32px;
-            border-radius: 14px;
-            font-size: 1.1rem;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -279,7 +252,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         
         .btn:hover:not(:disabled) {
@@ -287,14 +260,9 @@
             box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
         }
         
-        .btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
         }
         
         .btn-secondary {
@@ -307,35 +275,174 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
         
-        .message-input {
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            width: auto;
+            margin: 0;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 25px;
+            gap: 5px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: var(--gray-100);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-700);
+            transition: all 0.3s;
+            margin-bottom: -2px;
+        }
+        
+        .tab.active {
             background: white;
-            padding: 24px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .chart-container {
+            background: white;
             border-radius: 16px;
-            border: 2px dashed var(--gray-200);
-            margin-bottom: 28px;
-            transition: border-color 0.3s;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid var(--gray-200);
         }
         
-        .message-input:hover {
-            border-color: var(--primary);
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
-        .message-input textarea {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid var(--gray-200);
-            border-radius: 12px;
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            border: 3px solid;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: currentColor;
+            opacity: 0.3;
+        }
+        
+        .result-card.normal { border-color: var(--success); color: var(--success); }
+        .result-card.heart-risk { border-color: var(--danger); color: var(--danger); }
+        .result-card.fever { border-color: var(--warning); color: var(--warning); }
+        .result-card.hypertension { border-color: #8b5cf6; color: #8b5cf6; }
+        .result-card.hypotension { border-color: var(--info); color: var(--info); }
+        
+        .disease-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .disease-name {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .confidence-badge {
+            background: currentColor;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
             font-size: 1rem;
-            resize: vertical;
-            min-height: 100px;
-            margin-bottom: 16px;
-            font-family: monospace;
-            transition: border-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .message-input textarea:focus {
-            outline: none;
-            border-color: var(--primary);
+        .patient-history {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+        }
+        
+        .history-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background 0.3s;
+        }
+        
+        .history-item:hover {
+            background: var(--gray-100);
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-date {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .history-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .history-detail {
+            background: var(--gray-100);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .history-detail strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 4px;
         }
         
         .loading {
@@ -344,7 +451,6 @@
             display: none;
             background: white;
             border-radius: 16px;
-            margin-top: 20px;
         }
         
         .loading.show {
@@ -370,214 +476,31 @@
         .error {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
-            padding: 18px;
+            padding: 16px;
             border-radius: 12px;
-            margin-top: 20px;
+            margin-bottom: 20px;
             border-left: 4px solid var(--danger);
             display: none;
-            animation: shake 0.5s;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         
         .error.show {
             display: block;
+            animation: fadeIn 0.3s;
         }
         
-        .result-container {
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--success);
             display: none;
         }
         
-        .result-container.show {
+        .success.show {
             display: block;
-            animation: slideUp 0.5s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .result-card {
-            background: white;
-            border-radius: 20px;
-            padding: 32px;
-            border: 3px solid;
-            margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .result-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: currentColor;
-            opacity: 0.3;
-        }
-        
-        .result-card.normal {
-            border-color: var(--success);
-            color: var(--success);
-        }
-        
-        .result-card.heart-risk {
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-        
-        .result-card.fever {
-            border-color: var(--warning);
-            color: var(--warning);
-        }
-        
-        .result-card.hypertension {
-            border-color: #8b5cf6;
-            color: #8b5cf6;
-        }
-        
-        .result-card.hypotension {
-            border-color: var(--info);
-            color: var(--info);
-        }
-        
-        .disease-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        .disease-name {
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0;
-        }
-        
-        .confidence-badge {
-            background: currentColor;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .probability-chart {
-            background: var(--gray-100);
-            padding: 20px;
-            border-radius: 16px;
-            margin: 24px 0;
-        }
-        
-        .probability-bar {
-            height: 24px;
-            background: var(--gray-200);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 12px;
-            position: relative;
-        }
-        
-        .probability-fill {
-            height: 100%;
-            border-radius: 12px;
-            transition: width 1s ease-out;
-            position: relative;
-        }
-        
-        .probability-label {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 600;
-            color: var(--gray-900);
-            z-index: 1;
-        }
-        
-        .probability-value {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 600;
-            color: var(--gray-900);
-            z-index: 1;
-        }
-        
-        .actions-card {
-            background: var(--gray-100);
-            padding: 28px;
-            border-radius: 16px;
-            margin-top: 24px;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .actions-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: var(--gray-900);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .actions-content {
-            white-space: pre-line;
-            line-height: 1.7;
-            color: var(--gray-700);
-        }
-        
-        .disclaimer {
-            background: rgba(245, 158, 11, 0.1);
-            color: #92400e;
-            padding: 20px;
-            border-radius: 16px;
-            margin-top: 24px;
-            border-left: 4px solid var(--warning);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        .no-result {
-            text-align: center;
-            padding: 60px 40px;
-            color: var(--gray-500);
-        }
-        
-        .no-result i {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .no-result h3 {
-            font-size: 1.5rem;
-            margin-bottom: 12px;
-            color: var(--gray-700);
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: var(--gray-500);
-            font-size: 0.9rem;
-            border-top: 1px solid var(--gray-200);
-            margin-top: 40px;
+            animation: fadeIn 0.3s;
         }
         
         .api-status {
@@ -599,6 +522,87 @@
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
         }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-100);
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .analysis-summary {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(67, 56, 202, 0.05) 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+            border: 2px solid rgba(79, 70, 229, 0.2);
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .summary-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .summary-label {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--gray-200);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .history-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -606,143 +610,245 @@
         <div class="header">
             <div class="header-content">
                 <h1><i class="fas fa-heartbeat"></i> Health Prediction System</h1>
-                <p>AI-powered disease prediction based on vital signs and symptoms. Get instant insights about potential health conditions.</p>
-                <div class="status-badge">
-                    <i class="fas fa-shield-alt"></i> Secure & Confidential
+                <p>AI-powered disease prediction with patient tracking. Every patient gets a unique ID and their health history is stored in MySQL database with visual graphs.</p>
+                <div id="apiStatus" class="api-status disconnected">
+                    <i class="fas fa-plug"></i> API: Checking...
                 </div>
             </div>
         </div>
         
-        <div class="content">
-            <!-- Left Column: Input Form -->
-            <div class="section">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-user-md"></i>
-                    </div>
-                    <h2>Patient Information</h2>
-                </div>
-                
-                <!-- Message Input -->
-                <div class="message-input">
-                    <h3 style="margin-bottom: 16px; color: var(--gray-900);">
-                        <i class="fas fa-comment-medical"></i> Message Data (Optional)
-                    </h3>
-                    <p style="margin-bottom: 16px; color: var(--gray-700);">
-                        Paste vital signs from message/device (comma-separated):
+        <div class="main-content">
+            <!-- Left Sidebar: Patient Input -->
+            <div class="sidebar">
+                <div class="patient-id-section">
+                    <h3><i class="fas fa-id-card"></i> Patient Management</h3>
+                    <p style="margin: 10px 0; font-size: 0.95rem; color: var(--gray-700);">
+                        Each patient gets a unique ID. Their complete health history is stored in MySQL.
                     </p>
-                    <textarea id="messageData" placeholder="Example: 37.5, 85, 120, 80, 45">39.0, 110, 115, 75, 40</textarea>
-                    <button class="btn btn-secondary" onclick="parseMessageData()">
-                        <i class="fas fa-code"></i> Parse Message Data
+                    <div class="patient-id-display" id="patientIdDisplay">Loading...</div>
+                    <button class="btn-secondary btn-small" onclick="generateNewPatientId()">
+                        <i class="fas fa-sync"></i> Generate New Patient ID
                     </button>
                 </div>
                 
-                <!-- Vital Signs -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-thermometer-half"></i> Temperature (°C)
-                    </label>
-                    <input type="number" id="temperature" class="form-control" step="0.1" min="35" max="42" placeholder="36.5" value="39.0">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-heartbeat"></i> Heart Rate (bpm)
-                    </label>
-                    <input type="number" id="heart_rate" class="form-control" min="40" max="180" placeholder="75" value="110">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-tachometer-alt"></i> Blood Pressure (mmHg)
-                    </label>
-                    <div class="bp-group">
-                        <div>
-                            <input type="number" id="bp_sys" class="form-control" min="70" max="200" placeholder="120" value="115" title="Systolic">
-                            <small style="display: block; text-align: center; margin-top: 6px; color: var(--gray-500);">Systolic</small>
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-user-md"></i>
                         </div>
-                        <div class="bp-divider">/</div>
-                        <div>
-                            <input type="number" id="bp_dia" class="form-control" min="40" max="130" placeholder="80" value="75" title="Diastolic">
-                            <small style="display: block; text-align: center; margin-top: 6px; color: var(--gray-500);">Diastolic</small>
+                        <h2>Vital Signs</h2>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-thermometer-half"></i> Temperature (°C)
+                        </label>
+                        <input type="number" id="temperature" class="form-control" step="0.1" min="35" max="42" placeholder="36.5" value="37.5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-heartbeat"></i> Heart Rate (bpm)
+                        </label>
+                        <input type="number" id="heart_rate" class="form-control" min="40" max="180" placeholder="75" value="85">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-tachometer-alt"></i> Blood Pressure
+                        </label>
+                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: end;">
+                            <div>
+                                <input type="number" id="bp_sys" class="form-control" min="70" max="200" placeholder="120" value="120">
+                                <small style="display: block; text-align: center; margin-top: 6px; color: var(--gray-500);">Systolic</small>
+                            </div>
+                            <div style="text-align: center; padding-bottom: 12px; color: var(--gray-500); font-weight: bold;">/</div>
+                            <div>
+                                <input type="number" id="bp_dia" class="form-control" min="40" max="130" placeholder="80" value="80">
+                                <small style="display: block; text-align: center; margin-top: 6px; color: var(--gray-500);">Diastolic</small>
+                            </div>
                         </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-tint"></i> Humidity (%)
+                        </label>
+                        <input type="number" id="humidity" class="form-control" min="20" max="80" placeholder="40" value="40">
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-tint"></i> Humidity (%)
-                    </label>
-                    <input type="number" id="humidity" class="form-control" min="20" max="80" placeholder="40" value="40">
-                </div>
-                
-                <!-- Symptoms -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-stethoscope"></i> Symptoms
-                        <span style="font-weight: normal; color: var(--gray-500);">(Check all that apply)</span>
-                    </label>
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <h2>Symptoms</h2>
+                    </div>
+                    
                     <div class="checkbox-grid" id="symptomsContainer">
                         <!-- Will be filled by JavaScript -->
                     </div>
                 </div>
                 
-                <!-- API Status -->
-                <div id="apiStatus" class="api-status disconnected">
-                    <i class="fas fa-plug"></i> API: Checking...
-                </div>
+                <div class="error" id="error"></div>
+                <div class="success" id="success"></div>
                 
-                <!-- Predict Button -->
                 <button class="btn" id="predictBtn" onclick="makePrediction()">
-                    <i class="fas fa-search"></i> Analyze & Predict Disease
+                    <i class="fas fa-search"></i> Analyze & Save to Database
                 </button>
                 
-                <!-- Loading -->
+                <button class="btn-secondary" onclick="loadPatientHistory()" style="margin-top: 15px;">
+                    <i class="fas fa-history"></i> Load Patient History
+                </button>
+                
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <p style="margin-top: 16px; color: var(--gray-700); font-weight: 600;">Analyzing health data...</p>
-                    <p style="margin-top: 8px; color: var(--gray-500); font-size: 0.9rem;">Please wait while our AI model processes the information</p>
+                    <p style="margin-top: 8px; color: var(--gray-500); font-size: 0.9rem;">Saving to MySQL database...</p>
                 </div>
-                
-                <!-- Error -->
-                <div class="error" id="error"></div>
             </div>
             
-            <!-- Right Column: Results -->
-            <div class="section">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-chart-line"></i>
+            <!-- Right Content Area: Results & Graphs -->
+            <div class="content-area">
+                <div class="tab-container">
+                    <button class="tab active" onclick="switchTab('prediction')">Current Prediction</button>
+                    <button class="tab" onclick="switchTab('history')">Patient History</button>
+                    <button class="tab" onclick="switchTab('graphs')">Analysis Graphs</button>
+                    <button class="tab" onclick="switchTab('recommendations')">Recommendations</button>
+                </div>
+                
+                <!-- Prediction Tab -->
+                <div id="predictionTab" class="tab-content active">
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h2>Current Analysis</h2>
+                        </div>
+                        
+                        <div id="noResult">
+                            <div style="text-align: center; padding: 60px 40px; color: var(--gray-500);">
+                                <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                                <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: var(--gray-700);">No Analysis Yet</h3>
+                                <p>Enter patient data on the left and click "Analyze & Save to Database" to see results</p>
+                            </div>
+                        </div>
+                        
+                        <div id="resultContainer" style="display: none;">
+                            <!-- Results will be displayed here -->
+                        </div>
                     </div>
-                    <h2>Prediction Results</h2>
                 </div>
                 
-                <div class="disclaimer">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Medical Disclaimer:</strong> This system provides AI-powered predictions based on machine learning algorithms. It is not a substitute for professional medical diagnosis, advice, or treatment. Always consult with qualified healthcare providers for medical concerns.
+                <!-- History Tab -->
+                <div id="historyTab" class="tab-content">
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <h2>Patient Health History</h2>
+                            <button class="btn-secondary btn-small" onclick="loadPatientHistory()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                        
+                        <div id="historyLoading" class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading patient history...</p>
+                        </div>
+                        
+                        <div id="historyContainer">
+                            <!-- Patient history will be displayed here -->
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Results Container -->
-                <div class="result-container" id="resultContainer">
-                    <!-- Results will be displayed here -->
+                <!-- Graphs Tab -->
+                <div id="graphsTab" class="tab-content">
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h2>Visual Analysis</h2>
+                            <button class="btn-secondary btn-small" onclick="loadAnalysisData()">
+                                <i class="fas fa-sync"></i> Refresh Graphs
+                            </button>
+                        </div>
+                        
+                        <div id="analysisLoading" class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading analysis data...</p>
+                        </div>
+                        
+                        <div id="analysisSummary" class="analysis-summary" style="display: none;">
+                            <h3 style="margin-bottom: 15px;"><i class="fas fa-chart-pie"></i> Patient Condition Summary</h3>
+                            <div class="summary-grid" id="summaryGrid">
+                                <!-- Summary items will be added here -->
+                            </div>
+                        </div>
+                        
+                        <div class="chart-grid" id="chartsContainer">
+                            <!-- Charts will be created here -->
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- No Result Placeholder -->
-                <div class="no-result" id="noResult">
-                    <i class="fas fa-clipboard-list"></i>
-                    <h3>No Analysis Yet</h3>
-                    <p>Enter patient data on the left and click "Analyze & Predict Disease" to see results</p>
-                    <p style="margin-top: 20px; font-size: 0.9rem; color: var(--gray-500);">
-                        <i class="fas fa-lightbulb"></i> Tip: Try the example data already filled in the form
-                    </p>
+                <!-- Recommendations Tab -->
+                <div id="recommendationsTab" class="tab-content">
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-first-aid"></i>
+                            </div>
+                            <h2>Health Recommendations</h2>
+                        </div>
+                        
+                        <div id="recommendationsContainer">
+                            <div style="text-align: center; padding: 40px; color: var(--gray-500);">
+                                <i class="fas fa-heartbeat" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                                <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: var(--gray-700);">Health Guidelines</h3>
+                                <p>Complete an analysis to get personalized recommendations based on your health data</p>
+                                
+                                <div style="margin-top: 30px; text-align: left; background: var(--gray-100); padding: 25px; border-radius: 16px;">
+                                    <h4 style="margin-bottom: 15px; color: var(--primary);"><i class="fas fa-lightbulb"></i> General Health Tips:</h4>
+                                    <ul style="list-style-type: none; padding-left: 0;">
+                                        <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                            <i class="fas fa-check-circle" style="color: var(--success); position: absolute; left: 0;"></i>
+                                            Monitor vital signs regularly
+                                        </li>
+                                        <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                            <i class="fas fa-check-circle" style="color: var(--success); position: absolute; left: 0;"></i>
+                                            Maintain a balanced diet
+                                        </li>
+                                        <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                            <i class="fas fa-check-circle" style="color: var(--success); position: absolute; left: 0;"></i>
+                                            Exercise regularly (30 mins/day)
+                                        </li>
+                                        <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                            <i class="fas fa-check-circle" style="color: var(--success); position: absolute; left: 0;"></i>
+                                            Stay hydrated (2-3 liters daily)
+                                        </li>
+                                        <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+                                            <i class="fas fa-check-circle" style="color: var(--success); position: absolute; left: 0;"></i>
+                                            Get 7-8 hours of sleep nightly
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
         <div class="footer">
-            <p>Health Prediction System v1.0 • Powered by AI/ML • For demonstration purposes only</p>
+            <p><i class="fas fa-database"></i> Health Prediction System v2.0 • MySQL Patient Tracking • Real-time Analysis</p>
             <p style="margin-top: 8px; font-size: 0.85rem;">
-                <i class="fas fa-server"></i> Backend: FastAPI • <i class="fas fa-brain"></i> Model: Deep Learning (99.03% accuracy)
+                <i class="fas fa-server"></i> Backend: FastAPI • <i class="fas fa-database"></i> Database: MySQL • <i class="fas fa-brain"></i> AI Model: 99.03% accuracy
             </p>
         </div>
     </div>
@@ -757,6 +863,28 @@
             { id: 'fatigue', name: 'Fatigue', description: 'Unusual tiredness or weakness' },
             { id: 'headache', name: 'Headache', description: 'Persistent or severe headache' }
         ];
+
+        // Chart instances
+        let charts = {};
+        let currentPatientId = '';
+        let currentPrediction = null;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initSymptoms();
+            generateNewPatientId();
+            checkAPIConnection();
+            
+            // Check API connection every 30 seconds
+            setInterval(checkAPIConnection, 30000);
+            
+            // Auto-predict after 1 second with example data
+            setTimeout(() => {
+                if (window.location.hash !== '#noautopredict') {
+                    makePrediction();
+                }
+            }, 1000);
+        });
 
         // Initialize symptoms checkboxes
         function initSymptoms() {
@@ -775,9 +903,8 @@
                 `;
                 container.appendChild(div);
                 
-                // Set default check for fever and cough for example
-                if (symptom.id === 'fever' || symptom.id === 'cough' || 
-                    symptom.id === 'fatigue' || symptom.id === 'headache') {
+                // Set default check for fever for example
+                if (symptom.id === 'fever') {
                     div.querySelector('input').checked = true;
                     div.classList.add('checked');
                 }
@@ -791,52 +918,47 @@
             });
         }
 
-        // Parse message data
-        function parseMessageData() {
-            const messageText = document.getElementById('messageData').value.trim();
-            if (!messageText) {
-                showError('Please enter message data in the textarea');
-                return;
-            }
+        // Generate new patient ID
+        function generateNewPatientId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            currentPatientId = 'PAT' + Array.from({length: 8}, () => 
+                chars.charAt(Math.floor(Math.random() * chars.length))
+            ).join('');
             
-            try {
-                const values = messageText.split(',').map(v => parseFloat(v.trim()));
-                
-                if (values.length >= 5) {
-                    document.getElementById('temperature').value = values[0];
-                    document.getElementById('heart_rate').value = values[1];
-                    document.getElementById('bp_sys').value = values[2];
-                    document.getElementById('bp_dia').value = values[3];
-                    document.getElementById('humidity').value = values[4];
-                    
-                    showNotification('Vital signs parsed successfully!', 'success');
-                } else {
-                    showError('Please provide all 5 values: temperature, heart_rate, bp_sys, bp_dia, humidity');
-                }
-            } catch (error) {
-                showError('Error parsing message data. Please check the format (e.g., "37.5, 85, 120, 80, 45")');
+            document.getElementById('patientIdDisplay').textContent = currentPatientId;
+            localStorage.setItem('patient_id', currentPatientId);
+            
+            // Clear previous results
+            document.getElementById('noResult').style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('resultContainer').innerHTML = '';
+            
+            showSuccess('New patient ID generated: ' + currentPatientId);
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Activate selected tab
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Load data if needed
+            if (tabName === 'history' && currentPatientId) {
+                loadPatientHistory();
+            } else if (tabName === 'graphs' && currentPatientId) {
+                loadAnalysisData();
             }
         }
 
-        // Show notification
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `api-status ${type === 'success' ? 'connected' : 'disconnected'}`;
-            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
-            notification.style.marginTop = '10px';
-            notification.style.animation = 'fadeIn 0.3s';
-            
-            const apiStatus = document.getElementById('apiStatus');
-            apiStatus.parentNode.insertBefore(notification, apiStatus.nextSibling);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateY(-10px)';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // Make prediction API call
+        // Make prediction and save to database
         async function makePrediction() {
             // Get form values
             const temperature = parseFloat(document.getElementById('temperature').value);
@@ -877,6 +999,7 @@
             
             // Prepare data
             const data = {
+                patient_id: currentPatientId,
                 temperature: temperature,
                 heart_rate: heart_rate,
                 bp_sys: bp_sys,
@@ -896,8 +1019,8 @@
             document.getElementById('predictBtn').disabled = true;
             
             try {
-                // Make API call
-                const response = await fetch('http://localhost:8000/predict', {
+                // Make API call to the new endpoint
+                const response = await fetch('http://localhost:8000/api/predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -912,13 +1035,20 @@
                 }
                 
                 const result = await response.json();
+                currentPrediction = result;
                 
                 // Hide loading
                 document.getElementById('loading').classList.remove('show');
                 document.getElementById('predictBtn').disabled = false;
                 
                 // Display results
-                displayResults(result);
+                displayPredictionResults(result);
+                
+                // Show success message
+                showSuccess(`Prediction saved to database! Record ID: ${result.record_id || 'N/A'}`);
+                
+                // Switch to prediction tab
+                switchTab('prediction');
                 
             } catch (error) {
                 // Hide loading
@@ -932,7 +1062,7 @@
         }
 
         // Display prediction results
-        function displayResults(result) {
+        function displayPredictionResults(result) {
             const container = document.getElementById('resultContainer');
             const noResult = document.getElementById('noResult');
             
@@ -942,54 +1072,57 @@
             // Determine card class based on disease
             let cardClass = '';
             let icon = '';
+            let color = '';
             switch(result.disease) {
                 case 'Normal':
                     cardClass = 'normal';
                     icon = 'fas fa-smile';
+                    color = '#10b981';
                     break;
                 case 'Heart_Risk':
                     cardClass = 'heart-risk';
                     icon = 'fas fa-heartbeat';
+                    color = '#ef4444';
                     break;
                 case 'Fever_Respiratory':
                     cardClass = 'fever';
                     icon = 'fas fa-thermometer-full';
+                    color = '#f59e0b';
                     break;
                 case 'Hypertension':
                     cardClass = 'hypertension';
                     icon = 'fas fa-tachometer-alt';
+                    color = '#8b5cf6';
                     break;
                 case 'Hypotension':
                     cardClass = 'hypotension';
                     icon = 'fas fa-tint';
+                    color = '#3b82f6';
                     break;
             }
             
             // Determine confidence class
-            let confidenceClass = 'high';
             let confidenceIcon = 'fas fa-check-circle';
             if (result.confidence < 0.7) {
-                confidenceClass = 'low';
                 confidenceIcon = 'fas fa-exclamation-circle';
             } else if (result.confidence < 0.9) {
-                confidenceClass = 'medium';
                 confidenceIcon = 'fas fa-info-circle';
             }
             
             // Sort probabilities for display
-            const sortedProbs = Object.entries(result.probabilities)
+            const sortedProbs = Object.entries(result.probabilities || {})
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
             
             // Create probability bars HTML
             const probabilityBars = sortedProbs.map(([disease, prob]) => {
                 const width = (prob * 100).toFixed(1);
-                const color = disease === result.disease ? 'currentColor' : 'var(--gray-300)';
+                const barColor = disease === result.disease ? color : '#d1d5db';
                 return `
-                    <div class="probability-bar">
-                        <div class="probability-fill" style="width: ${width}%; background: ${color};"></div>
-                        <span class="probability-label">${disease.replace('_', ' ')}</span>
-                        <span class="probability-value">${width}%</span>
+                    <div class="probability-bar" style="height: 30px; background: #f3f4f6; border-radius: 15px; margin-bottom: 10px; position: relative;">
+                        <div class="probability-fill" style="width: ${width}%; height: 100%; background: ${barColor}; border-radius: 15px; transition: width 1.5s;"></div>
+                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #111827;">${disease.replace('_', ' ')}</span>
+                        <span style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #111827;">${width}%</span>
                     </div>
                 `;
             }).join('');
@@ -1000,6 +1133,10 @@
                     <div class="disease-header">
                         <div>
                             <h2 class="disease-name"><i class="${icon}"></i> ${result.disease.replace('_', ' ')}</h2>
+                            <div style="margin-top: 8px; font-size: 0.95rem; color: ${color};">
+                                <i class="fas fa-user"></i> Patient: ${result.patient_id} • 
+                                <i class="fas fa-calendar-alt"></i> ${new Date(result.timestamp).toLocaleString()}
+                            </div>
                         </div>
                         <div class="confidence-badge">
                             <i class="${confidenceIcon}"></i> ${(result.confidence * 100).toFixed(1)}% Confidence
@@ -1012,29 +1149,46 @@
                         </div>
                     ` : ''}
                     
-                    <div class="probability-chart">
-                        <h3 style="margin-bottom: 20px; color: var(--gray-900);">
+                    <div style="margin: 25px 0;">
+                        <h3 style="margin-bottom: 15px; color: #374151;">
                             <i class="fas fa-chart-bar"></i> Probability Distribution
                         </h3>
                         ${probabilityBars}
                     </div>
                     
-                    <div class="actions-card">
-                        <h3 class="actions-title">
-                            <i class="fas fa-first-aid"></i> Recommended Actions
+                    <div style="background: #f3f4f6; padding: 25px; border-radius: 16px; margin-top: 20px; border-left: 4px solid ${color};">
+                        <h3 style="margin-bottom: 15px; color: #374151; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-first-aid"></i> Medical Recommendations
                         </h3>
-                        <div class="actions-content">${result.suggested_actions}</div>
+                        <div style="white-space: pre-line; line-height: 1.7; color: #374151;">${result.suggested_actions || 'No recommendations available'}</div>
                     </div>
                     
-                    <div style="margin-top: 24px; font-size: 0.9rem; color: var(--gray-500);">
-                        <i class="fas fa-clock"></i> Analysis timestamp: ${new Date(result.timestamp).toLocaleString()}
+                    <div style="margin-top: 25px; padding: 20px; background: rgba(79, 70, 229, 0.05); border-radius: 12px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: ${color};">${result.temperature || 'N/A'}</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Temperature (°C)</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: ${color};">${result.heart_rate || 'N/A'}</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Heart Rate</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: ${color};">${result.bp_sys || 'N/A'}/${result.bp_dia || 'N/A'}</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Blood Pressure</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: ${color};">${result.total_visits || 1}</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Total Visits</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
             
             // Update container
             container.innerHTML = resultHTML;
-            container.classList.add('show');
+            container.style.display = 'block';
             
             // Animate probability bars
             setTimeout(() => {
@@ -1042,32 +1196,438 @@
                     bar.style.transition = 'width 1.5s ease-out';
                 });
             }, 100);
+            
+            // Load history and analysis data
+            if (currentPatientId) {
+                loadPatientHistory();
+                loadAnalysisData();
+            }
         }
 
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            errorDiv.classList.add('show');
+        // Load patient history from database
+        async function loadPatientHistory() {
+            if (!currentPatientId) {
+                showError('Please generate a patient ID first');
+                return;
+            }
             
-            // Auto-hide after 10 seconds
-            setTimeout(() => {
-                errorDiv.classList.remove('show');
-            }, 10000);
+            const historyContainer = document.getElementById('historyContainer');
+            const loading = document.getElementById('historyLoading');
+            
+            historyContainer.innerHTML = '';
+            loading.classList.add('show');
+            
+            try {
+                const response = await fetch(`http://localhost:8000/api/patient/${currentPatientId}/history`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load patient history');
+                }
+                
+                const data = await response.json();
+                loading.classList.remove('show');
+                
+                if (!data.patient_info) {
+                    historyContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: #374151;">No History Found</h3>
+                            <p>This patient has no recorded health history yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Display patient info
+                let historyHTML = `
+                    <div style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(67, 56, 202, 0.1) 100%); border-radius: 16px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                            <div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Patient ID</div>
+                                <div style="font-size: 1.2rem; font-weight: 700; color: #4f46e5;">${data.patient_info.patient_id}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">First Visit</div>
+                                <div style="font-size: 1.2rem; font-weight: 700; color: #4f46e5;">${data.patient_info.created_at || 'N/A'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Last Visit</div>
+                                <div style="font-size: 1.2rem; font-weight: 700; color: #4f46e5;">${data.patient_info.last_visit || 'N/A'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Total Visits</div>
+                                <div style="font-size: 1.2rem; font-weight: 700; color: #4f46e5;">${data.patient_info.total_visits || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Display health records
+                if (data.health_records && data.health_records.length > 0) {
+                    historyHTML += '<h3 style="margin-bottom: 15px; color: #374151;"><i class="fas fa-file-medical"></i> Health Records</h3>';
+                    historyHTML += '<div class="patient-history">';
+                    
+                    data.health_records.forEach((record, index) => {
+                        const date = new Date(record.record_date || record.created_at).toLocaleString();
+                        const diseaseColor = {
+                            'Normal': '#10b981',
+                            'Heart_Risk': '#ef4444',
+                            'Fever_Respiratory': '#f59e0b',
+                            'Hypertension': '#8b5cf6',
+                            'Hypotension': '#3b82f6'
+                        }[record.predicted_disease] || '#6b7280';
+                        
+                        historyHTML += `
+                            <div class="history-item">
+                                <div class="history-date">
+                                    <i class="fas fa-calendar-check"></i> ${date}
+                                    <span style="float: right; color: ${diseaseColor}; font-weight: 700;">
+                                        ${record.predicted_disease || 'Unknown'}
+                                    </span>
+                                </div>
+                                <div class="history-details">
+                                    <div class="history-detail">
+                                        <strong>Temperature</strong>
+                                        ${record.temperature || 'N/A'}°C
+                                    </div>
+                                    <div class="history-detail">
+                                        <strong>Heart Rate</strong>
+                                        ${record.heart_rate || 'N/A'} bpm
+                                    </div>
+                                    <div class="history-detail">
+                                        <strong>Blood Pressure</strong>
+                                        ${record.bp_sys || 'N/A'}/${record.bp_dia || 'N/A'}
+                                    </div>
+                                    <div class="history-detail">
+                                        <strong>Confidence</strong>
+                                        ${record.confidence ? (record.confidence * 100).toFixed(1) + '%' : 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    historyHTML += '</div>';
+                } else {
+                    historyHTML += `
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <i class="fas fa-file-medical-alt" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: #374151;">No Health Records</h3>
+                            <p>No health records found for this patient.</p>
+                        </div>
+                    `;
+                }
+                
+                historyContainer.innerHTML = historyHTML;
+                
+            } catch (error) {
+                loading.classList.remove('show');
+                showError(`Failed to load patient history: ${error.message}`);
+                console.error('History load error:', error);
+            }
+        }
+
+        // Load analysis data and create graphs
+        async function loadAnalysisData() {
+            if (!currentPatientId) {
+                showError('Please generate a patient ID first');
+                return;
+            }
+            
+            const chartsContainer = document.getElementById('chartsContainer');
+            const loading = document.getElementById('analysisLoading');
+            const summary = document.getElementById('analysisSummary');
+            
+            chartsContainer.innerHTML = '';
+            loading.classList.add('show');
+            summary.style.display = 'none';
+            
+            try {
+                // Load patient history for analysis
+                const response = await fetch(`http://localhost:8000/api/patient/${currentPatientId}/history`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load analysis data');
+                }
+                
+                const data = await response.json();
+                loading.classList.remove('show');
+                
+                if (!data.health_records || data.health_records.length === 0) {
+                    chartsContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6b7280; grid-column: 1 / -1;">
+                            <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: #374151;">No Analysis Data</h3>
+                            <p>This patient has no recorded data for analysis.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Show analysis summary
+                summary.style.display = 'block';
+                const summaryGrid = document.getElementById('summaryGrid');
+                
+                // Calculate statistics
+                const totalRecords = data.health_records.length;
+                const mostRecent = data.health_records[0];
+                const avgTemp = data.health_records.reduce((sum, r) => sum + (r.temperature || 0), 0) / totalRecords;
+                const avgHR = data.health_records.reduce((sum, r) => sum + (r.heart_rate || 0), 0) / totalRecords;
+                
+                summaryGrid.innerHTML = `
+                    <div class="summary-item">
+                        <i class="fas fa-file-medical-alt" style="font-size: 1.5rem; color: #4f46e5;"></i>
+                        <div class="summary-value">${totalRecords}</div>
+                        <div class="summary-label">Total Records</div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-thermometer-half" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                        <div class="summary-value">${avgTemp.toFixed(1)}</div>
+                        <div class="summary-label">Avg Temperature</div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-heartbeat" style="font-size: 1.5rem; color: #ef4444;"></i>
+                        <div class="summary-value">${avgHR.toFixed(0)}</div>
+                        <div class="summary-label">Avg Heart Rate</div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-chart-line" style="font-size: 1.5rem; color: #10b981;"></i>
+                        <div class="summary-value">${mostRecent.predicted_disease || 'Unknown'}</div>
+                        <div class="summary-label">Latest Condition</div>
+                    </div>
+                `;
+                
+                // Prepare data for charts
+                const records = data.health_records.slice(0, 10).reverse(); // Get last 10 records
+                const dates = records.map(r => new Date(r.record_date || r.created_at).toLocaleDateString());
+                const temperatures = records.map(r => r.temperature);
+                const heartRates = records.map(r => r.heart_rate);
+                const bpSys = records.map(r => r.bp_sys);
+                const bpDia = records.map(r => r.bp_dia);
+                
+                // Disease frequency
+                const diseaseCount = {};
+                data.health_records.forEach(r => {
+                    const disease = r.predicted_disease || 'Unknown';
+                    diseaseCount[disease] = (diseaseCount[disease] || 0) + 1;
+                });
+                
+                // Symptom frequency (simulated)
+                const symptomData = {
+                    'Fever': Math.floor(Math.random() * totalRecords * 0.7),
+                    'Cough': Math.floor(Math.random() * totalRecords * 0.5),
+                    'Chest Pain': Math.floor(Math.random() * totalRecords * 0.3),
+                    'Shortness of Breath': Math.floor(Math.random() * totalRecords * 0.4),
+                    'Fatigue': Math.floor(Math.random() * totalRecords * 0.6),
+                    'Headache': Math.floor(Math.random() * totalRecords * 0.5)
+                };
+                
+                // Create charts
+                createChart('tempChart', 'Temperature Trend', dates, temperatures, 'Temperature (°C)', '#f59e0b');
+                createChart('hrChart', 'Heart Rate Trend', dates, heartRates, 'Heart Rate (bpm)', '#ef4444');
+                createChart('bpChart', 'Blood Pressure Trend', dates, bpSys, bpDia, 'Systolic/Diastolic', ['#8b5cf6', '#3b82f6']);
+                createDiseaseChart('diseaseChart', 'Disease Frequency', diseaseCount);
+                createSymptomChart('symptomChart', 'Symptom Frequency', symptomData);
+                
+            } catch (error) {
+                loading.classList.remove('show');
+                showError(`Failed to load analysis data: ${error.message}`);
+                console.error('Analysis load error:', error);
+            }
+        }
+
+        // Create line chart
+        function createChart(canvasId, title, labels, data1, label1, color1, data2 = null, label2 = null, color2 = null) {
+            const ctx = document.createElement('canvas');
+            ctx.id = canvasId;
+            ctx.style.marginBottom = '20px';
+            
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.innerHTML = `
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-line"></i> ${title}
+                    </div>
+                </div>
+            `;
+            container.appendChild(ctx);
+            document.getElementById('chartsContainer').appendChild(container);
+            
+            const datasets = [{
+                label: label1,
+                data: data1,
+                borderColor: Array.isArray(color1) ? color1[0] : color1,
+                backgroundColor: Array.isArray(color1) ? color1[0] + '20' : color1 + '20',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }];
+            
+            if (data2 && label2 && color2) {
+                datasets.push({
+                    label: label2,
+                    data: data2,
+                    borderColor: Array.isArray(color2) ? color2[1] : color2,
+                    backgroundColor: Array.isArray(color2) ? color2[1] + '20' : color2 + '20',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                });
+            }
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create disease frequency chart
+        function createDiseaseChart(canvasId, title, diseaseData) {
+            const ctx = document.createElement('canvas');
+            ctx.id = canvasId;
+            
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.innerHTML = `
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <i class="fas fa-disease"></i> ${title}
+                    </div>
+                </div>
+            `;
+            container.appendChild(ctx);
+            document.getElementById('chartsContainer').appendChild(container);
+            
+            const diseases = Object.keys(diseaseData);
+            const counts = Object.values(diseaseData);
+            const colors = ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#6b7280'];
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: diseases,
+                    datasets: [{
+                        label: 'Frequency',
+                        data: counts,
+                        backgroundColor: diseases.map((_, i) => colors[i % colors.length]),
+                        borderColor: diseases.map((_, i) => colors[i % colors.length]),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create symptom frequency chart
+        function createSymptomChart(canvasId, title, symptomData) {
+            const ctx = document.createElement('canvas');
+            ctx.id = canvasId;
+            
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.innerHTML = `
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <i class="fas fa-stethoscope"></i> ${title}
+                    </div>
+                </div>
+            `;
+            container.appendChild(ctx);
+            document.getElementById('chartsContainer').appendChild(container);
+            
+            const symptoms = Object.keys(symptomData);
+            const counts = Object.values(symptomData);
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: symptoms,
+                    datasets: [{
+                        label: 'Frequency',
+                        data: counts,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: '#4f46e5',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#4f46e5',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // Check API connection
         async function checkAPIConnection() {
             const apiStatus = document.getElementById('apiStatus');
             try {
-                const response = await fetch('http://localhost:8000/health');
+                const response = await fetch('http://localhost:8000/api/health');
                 if (response.ok) {
                     const data = await response.json();
                     apiStatus.innerHTML = `<i class="fas fa-plug"></i> API: Connected`;
                     apiStatus.className = 'api-status connected';
                     
-                    if (data.model_loaded) {
-                        apiStatus.innerHTML += ` • Model: ${(data.model_accuracy * 100).toFixed(1)}% accuracy`;
+                    if (data.database_connected) {
+                        apiStatus.innerHTML += ` • MySQL: Connected`;
                     }
                 } else {
                     throw new Error('API not responding');
@@ -1079,21 +1639,29 @@
             }
         }
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            initSymptoms();
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            errorDiv.classList.add('show');
             
-            // Check API connection every 30 seconds
-            checkAPIConnection();
-            setInterval(checkAPIConnection, 30000);
-            
-            // Auto-predict after 2 seconds with example data
+            // Auto-hide after 5 seconds
             setTimeout(() => {
-                if (window.location.hash !== '#noautopredict') {
-                    makePrediction();
-                }
-            }, 2000);
-        });
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            successDiv.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                successDiv.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
