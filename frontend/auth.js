@@ -3,6 +3,8 @@
  * Corrected for Nordic Clinical Theme and Dual-Contact Logic
  */
 
+const API_BASE = window.location.origin;
+
 let currentRole = 'patient';
 
 function setRole(role) {
@@ -76,7 +78,7 @@ document.getElementById('authForm').addEventListener('submit', async (e) => {
     const endpoint = mode.trim().toLowerCase() === "sign up" ? "signup" : "login";
 
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/${endpoint}`, {
+        const response = await fetch(`${API_BASE}/api/${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

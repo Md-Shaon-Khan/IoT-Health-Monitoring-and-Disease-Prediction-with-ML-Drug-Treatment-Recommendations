@@ -4,6 +4,8 @@
  * Model Shape: Expected 11 inputs
  */
 
+const API_BASE = window.location.origin;
+
 document.getElementById('predictionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -28,7 +30,7 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
 
     try {
         // ৩. ব্যাকএন্ড এপিআই (FastAPI) কল করা
-        const response = await fetch('http://127.0.0.1:8000/api/predict', {
+        const response = await fetch('${API_BASE}/api/predict', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

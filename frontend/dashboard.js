@@ -3,6 +3,8 @@
  * Features: Role‑based default section, active link styling, no overview for patients.
  */
 
+const API_BASE = window.location.origin;
+
 document.addEventListener('DOMContentLoaded', () => {
     const userName = localStorage.getItem('userName') || 'Medical Professional';
     const userId = localStorage.getItem('userId');
@@ -70,7 +72,7 @@ function showSection(sectionId) {
 async function loadPatientOverview() {
     const patientId = localStorage.getItem('userId');
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/reports/${patientId}`);
+        const response = await fetch(`${API_BASE}/api/reports/${patientId}`);
         const data = await response.json();
         
         document.getElementById('totalVisits').innerText = data.length;
@@ -107,7 +109,7 @@ async function loadPatientOverview() {
 // --- DOCTOR OVERVIEW (with patient list) ---
 async function loadDoctorOverview() {
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/doctor-stats');
+        const response = await fetch('${API_BASE}/api/doctor-stats');
         const stats = await response.json();
 
         document.getElementById('totalPatients').innerText = stats.total_patients;
@@ -116,7 +118,7 @@ async function loadDoctorOverview() {
         document.getElementById('pendingCount').innerText = stats.pending;
 
         // Load patient list with latest risk
-        const patientRes = await fetch('http://127.0.0.1:8000/api/doctor-patient-list');
+        const patientRes = await fetch('${API_BASE}/api/doctor-patient-list');
         const patients = await patientRes.json();
         const container = document.getElementById('patientListContainer');
         container.innerHTML = patients.map(p => `
@@ -137,14 +139,14 @@ async function loadReports() {
     const reportList = document.getElementById('patientReportList');
     
     try {
-        const feedbackRes = await fetch(`http://127.0.0.1:8000/api/get-feedback/${patientId}`);
+        const feedbackRes = await fetch(`${API_BASE}/api/get-feedback/${patientId}`);
         const feedback = await feedbackRes.json();
         if (feedback && feedback.message) {
             document.getElementById('doctorMessageArea').classList.remove('hidden');
             document.getElementById('feedbackText').innerText = `"${feedback.message}"`;
         }
 
-        const response = await fetch(`http://127.0.0.1:8000/api/reports/${patientId}`);
+        const response = await fetch(`${API_BASE}/api/reports/${patientId}`);
         const reports = await response.json();
         
         reportList.innerHTML = reports.map(r => `
@@ -186,7 +188,7 @@ async function handlePredict(e) {
     };
 
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/predict', {
+        const res = await fetch('${API_BASE}/api/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(inputData)
@@ -215,7 +217,7 @@ async function handlePredict(e) {
 // --- DOCTOR: LOAD ALL PATIENTS INTO LIST ---
 async function loadAllPatients(side) {
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/search-patient?q='); // empty query returns all
+        const res = await fetch('${API_BASE}/api/search-patient?q='); // empty query returns all
         const list = await res.json();
         document.getElementById(`list${side}`).innerHTML = list.map(p => `
             <div class="registry-item" onclick="selectPatient('${side}', '${p.id_str}', '${p.name}')">
@@ -232,7 +234,7 @@ async function selectPatient(side, id_str, name) {
     document.getElementById(`list${side}`).innerHTML = ""; 
 
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/reports/${id_str}`);
+        const response = await fetch(`${API_BASE}/api/reports/${id_str}`);
         const data = await response.json();
         if (data.length > 0) {
             renderPatientCharts(side, data);
@@ -315,7 +317,7 @@ async function liveSearch(side) {
         return;
     }
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/search-patient?q=${q}`);
+        const res = await fetch(`${API_BASE}/api/search-patient?q=${q}`);
         const list = await res.json();
         document.getElementById(`list${side}`).innerHTML = list.map(p => `
             <div class="registry-item" onclick="selectPatient('${side}', '${p.id_str}', '${p.name}')">
@@ -332,7 +334,7 @@ async function sendAdvice(side) {
     if (!msg) return alert("Please type a message.");
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/send-feedback', {
+        const response = await fetch('${API_BASE}/api/send-feedback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ doctor_id: localStorage.getItem('userId'), patient_id: pId, message: msg })
@@ -349,7 +351,7 @@ async function sendAdvice(side) {
 async function loadPatientHealthTrend() {
     const patientId = localStorage.getItem('userId');
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/reports/${patientId}`);
+        const res = await fetch(`${API_BASE}/api/reports/${patientId}`);
         const reports = await res.json();
         const recent = reports.slice(0, 7).reverse(); // last 7 in chronological order
         new Chart(document.getElementById('healthChart'), {
